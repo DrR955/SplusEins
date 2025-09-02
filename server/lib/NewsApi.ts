@@ -1,6 +1,6 @@
-import * as cacheManager from 'cache-manager';
-import * as fsStore from 'cache-manager-fs-hash';
-import * as moment from 'moment';
+import cacheManager from 'cache-manager';
+import fsStore from 'cache-manager-fs-hash';
+import moment from 'moment';
 import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
@@ -51,9 +51,9 @@ async function ostfaliaNewsRequest (newsSelector: string): Promise<NewsElement[]
 
   const response = await fetch(
     'https://www.ostfalia.de/cms/system/modules/de.ostfalia.module.template/elements/renderNewsList.jsp', {
-      method: 'POST',
-      body: query
-    }).then((res) => res.text());
+    method: 'POST',
+    body: query
+  }).then((res) => res.text());
 
   const $ = cheerio.load(response);
   const elements: NewsElement[] = $('article').map(function () {

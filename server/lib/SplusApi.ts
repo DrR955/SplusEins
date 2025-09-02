@@ -1,12 +1,12 @@
 import fetch, { Headers } from 'node-fetch';
-import * as cacheManager from 'cache-manager';
-import * as fsStore from 'cache-manager-fs-hash';
-import * as moment from 'moment';
+import cacheManager from 'cache-manager';
+import fsStore from 'cache-manager-fs-hash';
+import moment from 'moment';
 import { Event, TimetableRequest } from '../model/SplusEinsModel';
 import { parseSkedCSV, parseSkedGraphical, parseTimetableIntranet, parseSkedList } from './SkedParser';
-import * as sanitize from 'sanitize-html';
+import sanitize from 'sanitize-html';
 import { ParsedLecture } from '../model/SplusModel';
-import * as iconv from 'iconv-lite';
+import iconv from 'iconv-lite';
 
 const flatten = <T>(arr: T[][]) => [].concat(...arr) as T[];
 

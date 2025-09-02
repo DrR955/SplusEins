@@ -1,10 +1,10 @@
 import { ParsedLecture } from '../model/SplusModel';
 import { Event } from '../model/SplusEinsModel';
-import * as moment from 'moment';
+import moment from 'moment';
 
 describe('Test Event', () => {
   function testLecture(title = 'Test - VL',
-                       lecturer = 'Prof. Dr. tst. S. Eins'): ParsedLecture {
+    lecturer = 'Prof. Dr. tst. S. Eins'): ParsedLecture {
     return <ParsedLecture> {
       title,
       start: moment('2019-03-19T07:15:00.000Z').toDate(),

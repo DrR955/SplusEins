@@ -1,12 +1,13 @@
-import * as express from 'express';
-import * as cacheManager from 'cache-manager';
-import * as fsStore from 'cache-manager-fs-hash';
+import express from 'express';
+import cacheManager from 'cache-manager';
+import fsStore from 'cache-manager-fs-hash';
+import { createClient } from 'db-vendo-client';
+import { profile as dbProfile } from 'db-vendo-client/p/db/index.js';
 
-import * as createClient from 'hafas-client';
-import * as dbProfile from 'hafas-client/p/db'
+// static ESM import, Node 22+ required
+const getHafasClient = async () => createClient(dbProfile, 'spluseins.de');
 
-// create a client with Deutsche Bahn profile
-const hafasClient = createClient(dbProfile, 'spluseins.de')
+// const hafasClient = createClient(dbProfile, 'spluseins.de');
 
 // default must be in /tmp because the rest is RO on AWS Lambda
 const CACHE_PATH = process.env.CACHE_PATH || '/tmp/spluseins-cache';
@@ -38,6 +39,7 @@ router.get('/', async (req, res, next) => {
   const fh = '891038'
 
   try {
+    const hafasClient = await getHafasClient();
     const data = await cache.wrap('bus', async () => {
       console.log('bus cache miss for key bus');
 

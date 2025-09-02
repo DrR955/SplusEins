@@ -1,9 +1,9 @@
-import * as moment from 'moment';
-import * as express from 'express';
+import moment from 'moment';
+import express from 'express';
 import ical from 'ical-generator';
 import { createHash } from 'crypto';
 
-import * as TIMETABLES from '../assets/timetables.json';
+import TIMETABLES from '../assets/timetables.json';
 import { Event, TimetableRequest } from '../model/SplusEinsModel';
 import { getEvents } from '../lib/SplusApi';
 

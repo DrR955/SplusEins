@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape */
-import * as express from 'express';
-import * as RSS from 'rss';
+import express from 'express';
+import RSS from 'rss';
 import { } from 'rss';
 import getNews from '../lib/NewsApi'
 import { NewsElement } from '~/model/SplusEinsModel';

@@ -8,6 +8,9 @@ export default {
         }
       }
     : {}),
+  // server: {
+  //   host: '0.0.0.0'
+  // },
   telemetry: false,
   modern: process.env.NODE_ENV == 'development' ? false : 'server',
 

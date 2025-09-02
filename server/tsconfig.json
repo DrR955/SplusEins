@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2018",
+  "module": "ESNext",
+  "moduleResolution": "Bundler",
+    "target": "ES2020",
     "sourceMap": true,
     "lib": ["es2017", "es2018", "es2019", "esnext"],
     "resolveJsonModule": true,
     "downlevelIteration": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "~/*": [

@@ -1,5 +1,5 @@
 import { load } from 'cheerio';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { ParsedLecture } from '../model/SplusModel';
 import parseTable from './parseTable';
 import * as CSV from 'csv-string';

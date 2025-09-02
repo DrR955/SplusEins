@@ -1,11 +1,11 @@
-import * as express from 'express';
-import * as cacheManager from 'cache-manager';
-import * as fsStore from 'cache-manager-fs-hash';
-import * as moment from 'moment';
+import express from 'express';
+import cacheManager from 'cache-manager';
+import fsStore from 'cache-manager-fs-hash';
+import moment from 'moment';
 import fetch from 'node-fetch';
 
 import { MensaDayPlan, MensaMeal, Mensa, MensaOpening, StwMensaMeal } from '../model/SplusEinsModel';
-import timeoutSignal = require('timeout-signal')
+import timeoutSignal from 'timeout-signal'
 
 // default must be in /tmp because the rest is RO on AWS Lambda
 const CACHE_PATH = process.env.CACHE_PATH || '/tmp/spluseins-cache';
