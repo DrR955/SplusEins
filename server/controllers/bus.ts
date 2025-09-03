@@ -2,11 +2,11 @@ import * as express from 'express';
 import * as cacheManager from 'cache-manager';
 import * as fsStore from 'cache-manager-fs-hash';
 
-import * as createClient from 'hafas-client';
-import * as dbProfile from 'hafas-client/p/db'
+import {createClient} from 'db-vendo-client';
+import {profile} from 'db-vendo-client/p/db'
 
 // create a client with Deutsche Bahn profile
-const hafasClient = createClient(dbProfile, 'spluseins.de')
+const hafasClient = createClient(profile, 'spluseins.de')
 
 // default must be in /tmp because the rest is RO on AWS Lambda
 const CACHE_PATH = process.env.CACHE_PATH || '/tmp/spluseins-cache';
