@@ -5,7 +5,7 @@ import splusController from './controllers/splus';
 import mensaController from './controllers/mensa';
 import newsController from './controllers/news';
 import icsController from './controllers/ics';
-import busController from './controllers/bus';
+import transportController from './controllers/transport';
 
 const COOKIE_SECRET = process.env.COOKIE_SECRET;
 
@@ -24,7 +24,7 @@ class App {
     this.app.use(this.basePath + '/mensa', mensaController);
     this.app.use(this.basePath + '/news', newsController);
     this.app.use(this.basePath + '/ics', icsController);
-    this.app.use(this.basePath + '/bus', busController);
+    this.app.use(this.basePath + '/transport', transportController);
 
     // express default route handler => 404
     this.app.use(function (req, res, _next) {

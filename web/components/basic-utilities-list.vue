@@ -40,7 +40,7 @@
     </v-list-item>
 
     <v-list-item
-      to="/bus"
+      to="/transport"
       nuxt
     >
       <v-list-item-action>
@@ -48,7 +48,7 @@
       </v-list-item-action>
       <v-list-item-content>
         <v-list-item-title>
-          Busse Wolfenbüttel
+          ÖPNV
         </v-list-item-title>
       </v-list-item-content>
     </v-list-item>
