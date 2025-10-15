@@ -1,111 +1,95 @@
 <template>
-  <v-container
-    fluid
-    class="pa-0"
-  >
-    <v-card
-      flat
-      :loading="loading"
-    >
-      <v-alert
-        v-if="error"
-        type="error"
-        dense
-        outlined
-        class="ma-2"
-      >
-        Fehler beim Laden der ÖPNV-Daten. Bitte später erneut versuchen.
-      </v-alert>
-
+  <v-container>
+    <v-card flat>
       <v-tabs
         v-model="activeTab"
-        class="w-100 tabs-no-prev-gap tabs-fullbleed"
+        class="w-100 tabs-fullbleed"
+        show-arrows="always"
       >
         <v-tab
           v-for="loc in locations"
           :key="loc.key"
-          @click="setLocation(loc.key)"
+          @click="setLocationAndLoad(loc.key)"
         >
           {{ loc.name }}
         </v-tab>
       </v-tabs>
 
-      <v-alert
-        v-if="loading && !hasCache"
-        type="info"
-        dense
-        outlined
-        class="ma-2"
-      >
-        Aktuelle Verkehrsdaten werden abgefragt – dies kann einen Moment dauern.
-      </v-alert>
+      <div class="d-flex justify-center">
+        <div style="max-width: 1100px; width: 100%;">
+          <v-tabs-items v-model="activeTab">
+            <v-tab-item
+              v-for="loc in locations"
+              :key="loc.key"
+            >
+              <template v-if="allData[loc.key]">
+                <v-row
+                  dense
+                  class="ma-0 pa-2"
+                >
+                  <v-col
+                    v-for="direction in loc.directions"
+                    :key="loc.key + ':' + direction.label.from + ':' + direction.label.to"
+                    cols="12"
+                    :md="12"
+                    :lg="6"
+                    :xl="6"
+                  >
+                    <transport-departures
+                      :label="direction.label"
+                      :osm="direction.osm"
+                      :departures="allData[loc.key].directions[direction.label.from + ' → ' + direction.label.to]"
+                    />
+                  </v-col>
+                </v-row>
 
-      <v-container
-        v-if="loading"
-        class="pa-4"
-      >
-        <v-row class="justify-center">
-          <v-col
-            v-for="n in 2"
-            :key="'skl-'+n"
-            cols="12"
-            sm="12"
-            md="6"
-            lg="6"
-            xl="3"
-            class="pa-2 d-flex"
-          >
-            <transport-departures-skeleton class="flex-grow-1" />
-          </v-col>
-        </v-row>
-      </v-container>
+                <v-row class="ma-0 px-2 pb-2 pt-0">
+                  <v-col
+                    cols="12"
+                    class="d-flex justify-space-between align-center"
+                  >
+                    <span class="caption grey--text">
+                      Zuletzt aktualisiert: {{ formatUpdated(allData[loc.key].lastUpdated) }}
+                    </span>
+                    <span class="caption grey--text">
+                      Quelle: MOTIS (<a href="https://transitous.org">Transitous</a>)
+                    </span>
+                  </v-col>
+                </v-row>
+              </template>
 
-      <v-tabs-items
-        v-else
-        v-model="activeTab"
-      >
-        <v-tab-item
-          v-for="loc in locations"
-          :key="loc.key"
-        >
-          <v-container class="pa-4">
-            <v-row class="justify-center">
-              <v-col
-                v-for="(departures, directionName) in allData[loc.key].directions"
-                :key="directionName"
-                cols="12"
-                sm="12"
-                md="6"
-                lg="6"
-                xl="3"
-                class="pa-2 d-flex"
-              >
-                <transport-departures
-                  class="flex-grow-1"
-                  :title="directionName"
-                  :departures="departures"
-                />
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-tab-item>
-      </v-tabs-items>
+              <template v-else>
+                <v-row
+                  dense
+                  class="ma-0 pa-2"
+                >
+                  <v-col
+                    v-for="direction in (loc.directions || [])"
+                    :key="loc.key + ':skeleton:' + direction.label.from + ':' + direction.label.to"
+                    cols="12"
+                    :md="12"
+                    :lg="6"
+                    :xl="6"
+                  >
+                    <transport-departures-skeleton />
+                  </v-col>
+                </v-row>
 
-      <div class="px-4">
-        <span class="pt-4 d-flex justify-end text-caption text--secondary">
-          Quelle:&nbsp;
-          <a
-            href="https://transitous.org/"
-            class="link"
-          >Transitous</a>
-        </span>
-        <span
-          v-if="!loading && lastUpdated"
-          class="d-flex justify-end text-caption text--secondary"
-        >
-          Zuletzt aktualisiert:
-          {{ $dayjs(lastUpdated).format('HH:mm:ss') }} Uhr
-        </span>
+                <v-row class="ma-0 px-2 pb-2 pt-0">
+                  <v-col
+                    cols="12"
+                    class="d-flex justify-space-between align-center"
+                  >
+                    <span class="caption grey--text">Lade …</span>
+                    <span class="caption grey--text">
+                      Quelle: MOTIS (<a href="https://transitous.org">Transitous</a>)
+                    </span>
+                  </v-col>
+                </v-row>
+              </template>
+            </v-tab-item>
+          </v-tabs-items>
+        </div>
       </div>
     </v-card>
   </v-container>
@@ -115,22 +99,13 @@
 import { mapState, mapActions, mapMutations } from 'vuex';
 import TransportDepartures from '../components/transport-departures.vue';
 import TransportDeparturesSkeleton from '../components/transport-departures-skeleton.vue';
+import dayjs from 'dayjs';
+
+dayjs.locale('de');
 
 export default {
   name: 'TransportPage',
   components: { TransportDepartures, TransportDeparturesSkeleton },
-  head () {
-    return {
-      title: 'ÖPNV',
-      meta: [
-        {
-          hid: 'description',
-          name: 'description',
-          content: 'Öffentlicher Personennahverkehr - Abfahrtszeiten für alle Ostfalia-Standorte'
-        }
-      ]
-    };
-  },
   data () {
     return {
       activeTab: 0,
@@ -142,38 +117,68 @@ export default {
     ...mapState({
       location: (state) => state.transport.location,
       locations: (state) => state.transport.locations,
-      allData: (state) => state.transport.data,
-      lastUpdated: (state) => state.transport.lastUpdated
-    }),
-    hasCache () {
-      return !!this.lastUpdated && this.allData && Object.keys(this.allData).length > 0;
+      allData: (state) => state.transport.data
+    })
+  },
+  watch: {
+    locations: {
+      immediate: true,
+      handler (list) {
+        if (!list || list.length === 0) return;
+        const idx = list.findIndex(l => l.key === this.location);
+        this.activeTab = idx >= 0 ? idx : 0;
+      }
+    },
+    activeTab (idx) {
+      const loc = this.locations[idx];
+      if (loc && loc.key !== this.location) {
+        this.setLocationAndLoad(loc.key);
+      }
     }
   },
   async mounted () {
-    this.startLoading();
-    try {
-      await this.load();
-      this.loading = false;
-      this.error = false;
-    } catch (err) {
-      this.loading = false;
-      this.error = true;
-      console.log('Error loading transport data: ', err);
+    // 1) load tabs (locations metadata)
+    await this.load();
+    // 2) default tab: either current location from store, or first available location
+    const defaultKey = this.locations.find(l => l.key === this.location)?.key || this.locations[0]?.key;
+    if (defaultKey) {
+      if (defaultKey !== this.location) this.setLocation(defaultKey);
+      await this.load({ location: defaultKey });
     }
+    this.loading = false;
   },
   methods: {
-    ...mapActions({
-      load: 'transport/load'
-    }),
-    ...mapMutations({
-      setLocation: 'transport/setLocation'
-    }),
-    startLoading () {
-      this.loading = true;
-      this.error = false;
+    ...mapActions({ load: 'transport/load' }),
+    ...mapMutations({ setLocation: 'transport/setLocation' }),
+    async setLocationAndLoad (key) {
+      this.setLocation(key);
+      if (!this.allData[key]) {
+        try {
+          await this.load({ location: key });
+        } catch (err) {
+          console.log('Error loading transport data: ', err);
+        }
+      }
+    },
+    formatUpdated (ts) {
+      if (!ts) return '-';
+      try {
+        return dayjs(ts).format('HH:mm:ss');
+      } catch (_) {
+        return '-';
+      }
+    },
+    dynamicRowStyle (directions) {
+      // Card-Breite inkl. Padding (z.B. 450px), Gap (z.B. 16px)
+      const cardWidth = 450;
+      const gap = 16;
+      const n = Object.keys(directions || {}).length || 1;
+      // Maximal 4 nebeneinander, sonst wrap
+      const visible = Math.min(n, 4);
+      const width = visible * cardWidth + (visible - 1) * gap;
+      return `width: ${width}px; min-width: ${cardWidth}px;`;
     }
-  },
-  middleware: 'cached'
+  }
 };
 </script>
 

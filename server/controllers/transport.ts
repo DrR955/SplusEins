@@ -38,7 +38,18 @@ const cache = CACHE_DISABLE
 
 router.options('/');
 
-// helper function to fetch connections for a specific direction
+// helper: build locations metadata for tabs
+const buildLocationsMeta = () =>
+  Object.entries(transportLocations).map(([key, loc]) => ({
+    key,
+    name: loc.name,
+    directions: loc.directions.map(d => ({
+      label: d.label,
+      osm: d.osm
+    }))
+  }));
+
+// helper: fetch connections for a specific direction
 async function fetchDirectionConnections(direction: TransportDirection): Promise<TransportConnection[]> {
   const motisOpts = {
     results: 5,
@@ -47,81 +58,91 @@ async function fetchDirectionConnections(direction: TransportDirection): Promise
   };
 
   try {
-    const journeys = await motisClient.journeys(
-      direction.from,
-      direction.to,
-      motisOpts
-    );
+    const journeys = await motisClient.journeys(direction.from, direction.to, motisOpts);
 
-    // extract and format connections
-    const connections: TransportConnection[] = journeys.journeys.map(({ legs }) => {
-      const firstLeg = legs[0];
-      const lastLeg = legs[legs.length - 1];
+    const connections: TransportConnection[] = journeys.journeys
+      .map(({ legs }) => {
+        const firstLeg = legs[0];
+        const lastLeg = legs[legs.length - 1];
 
-      return {
-        departure: firstLeg.departure,
-        arrival: lastLeg.arrival,
-        line: firstLeg.line?.name || lastLeg.line?.name,
-        mode: firstLeg.line?.mode || lastLeg.line?.mode,
-        direction: firstLeg.direction || lastLeg.destination?.name,
-        legs: legs.length,
-        duration: new Date(lastLeg.arrival).getTime() - new Date(firstLeg.departure).getTime()
-      };
-    }).sort((a, b) => new Date(a.departure).getTime() - new Date(b.departure).getTime());
+        return {
+          departure: firstLeg.departure,
+          arrival: lastLeg.arrival,
+          line: firstLeg.line?.name || lastLeg.line?.name,
+          mode: firstLeg.line?.mode || lastLeg.line?.mode,
+          direction: firstLeg.direction || lastLeg.destination?.name,
+          legs: legs.length,
+          duration: new Date(lastLeg.arrival).getTime() - new Date(firstLeg.departure).getTime()
+        };
+      })
+      .sort((a, b) => new Date(a.departure).getTime() - new Date(b.departure).getTime());
 
     return connections;
   } catch (error) {
-    console.error(`Error fetching ${direction.name}:`, error);
+    console.error(`Error fetching ${direction.label?.from} → ${direction.label?.to}:`, error);
     return [];
   }
 }
 
-// /api/transport - Returns data for ALL locations at once
+// helper: load a single location
+async function loadSingleLocation(locationKey: string): Promise<TransportDataResponse> {
+  const locationData = transportLocations[locationKey];
+  const results: { [directionKey: string]: TransportConnection[] } = {};
+
+  const directionResults = await Promise.all(
+    locationData.directions.map(async (direction) => {
+      const connections = await fetchDirectionConnections(direction);
+      const directionKey = `${direction.label.from} → ${direction.label.to}`;
+      return { directionKey, connections };
+    })
+  );
+
+  directionResults.forEach(({ directionKey, connections }) => {
+    results[directionKey] = connections;
+  });
+
+  return {
+    location: locationData.name,
+    directions: results,
+    lastUpdated: Date.now()
+  };
+}
+
+// /api/transport
+// Behavior:
+// - No ?location param: return only locations metadata (for tabs), NO data loaded
+// - With ?location=KEY: load ONLY that location, plus always all locations metadata
+// Cache keys:
+// - Without location: 'transport_locations_meta'
+// - With location=KEY: 'transport_location_KEY'
 router.get('/', async (req, res, next) => {
-  const cacheKey = 'transport_all_locations';
+  const locationKey = (req.query.location as string) || undefined;
+  const cacheKey = locationKey ? `transport_location_${locationKey}` : 'transport_locations_meta';
 
-  // console.log(await motisClient.locations('Wolfsburg Hauptbahnhof'));
   try {
-    const data = await cache.wrap(cacheKey, async () => {
-      console.log(`transport cache miss for key ${cacheKey}`);
+    const payload = await cache.wrap(cacheKey, async () => {
+      const locations = buildLocationsMeta();
 
-      const allLocationsData: { [locationKey: string]: TransportDataResponse } = {};
-
-      for (const [locationKey, locationData] of Object.entries(transportLocations)) {
-        const results: { [directionName: string]: TransportConnection[] } = {};
-
-        const directionPromises = locationData.directions.map(async (direction) => {
-          const connections = await fetchDirectionConnections(direction);
-          return { directionName: direction.name, connections };
-        });
-
-        const directionResults = await Promise.all(directionPromises);
-
-        // map results to direction names
-        directionResults.forEach(({ directionName, connections }) => {
-          results[directionName] = connections;
-        });
-
-        allLocationsData[locationKey] = {
-          location: locationData.name,
-          directions: results,
-          lastUpdated: Date.now()
+      if (!locationKey || !transportLocations[locationKey]) {
+        return {
+          locations,
+          data: {},
+          lastUpdated: Date.now(),
+          ttlSeconds: CACHE_SECONDS
         };
       }
 
+      const one = await loadSingleLocation(locationKey);
       return {
-        locations: Object.entries(transportLocations).map(([key, loc]) => ({
-          key,
-          name: loc.name,
-          directions: loc.directions.map(d => d.name)
-        })),
-        data: allLocationsData,
-        lastUpdated: Date.now()
+        locations,
+        data: { [locationKey]: one },
+        lastUpdated: Date.now(),
+        ttlSeconds: CACHE_SECONDS
       };
     }, { ttl: CACHE_SECONDS });
 
     res.set('Cache-Control', `public, max-age=${CACHE_SECONDS}`);
-    res.json(data);
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching transport data:', error);
     next(error);

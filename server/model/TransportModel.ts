@@ -2,12 +2,20 @@
  * Represents a single direction/route between two locations
  */
 export interface TransportDirection {
-  /** Display name for this route (e.g., "FH → Hauptbahnhof") */
-  name: string;
+  /** Display names from and to locations */
+  label: {
+    from: string;
+    to: string;
+  }
   /** DELFI station ID for the departure location */
   from: string;
   /** DELFI station ID for the destination location */
   to: string;
+  /** OpenStreetMap links for this route: from (start) and to (destination) */
+  osm: {
+    from: string;
+    to: string;
+  };
 }
 
 /**

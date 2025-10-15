@@ -5,7 +5,45 @@
     elevation="1"
   >
     <v-card-title>
-      <span class="text-h6">{{ title }}</span>
+      <span class="text-h6 d-flex align-center">
+        <span>
+          <a
+            v-if="osm && osm.from"
+            :href="osm.from"
+            target="_blank"
+            rel="noopener"
+            class="font-weight-medium"
+            aria-label="Startpunkt auf OpenStreetMap anzeigen"
+            title="Startpunkt auf OpenStreetMap anzeigen"
+          >
+            {{ label.from }}<v-icon
+              small
+              color="green darken-2"
+              class="ml-1"
+              style="vertical-align: middle;"
+            >mdi-map-marker</v-icon>
+          </a>
+        </span>
+        <span class="mx-2">→</span>
+        <span>
+          <a
+            v-if="osm && osm.to"
+            :href="osm.to"
+            target="_blank"
+            rel="noopener"
+            class="font-weight-medium"
+            aria-label="Zielpunkt auf OpenStreetMap anzeigen"
+            title="Zielpunkt auf OpenStreetMap anzeigen"
+          >
+            {{ label.to }}<v-icon
+              small
+              color="red darken-2"
+              class="ml-1"
+              style="vertical-align: middle;"
+            >mdi-map-marker</v-icon>
+          </a>
+        </span>
+      </span>
     </v-card-title>
     <v-divider />
     <v-card-text class="py-1">
@@ -23,24 +61,17 @@
               {{ formatTime(dep.departure) }}
               Linie: <span>{{ dep.line }}</span>
             </div>
-            <v-tooltip bottom>
-              <template #activator="{ on, attrs }">
-                <v-icon
-                  v-bind="attrs"
-                  v-on="on"
-                  :color="getModeColor(dep.mode)"
-                  class="icon ml-1 align-self-center"
-                  small
-                  role="img"
-                  :aria-label="getModeLabel(dep.mode)"
-                  :title="getModeLabel(dep.mode)"
-                  aria-hidden="false"
-                >
-                  {{ getModeIcon(dep.mode) }}
-                </v-icon>
-              </template>
-              <span>{{ getModeLabel(dep.mode) }}</span>
-            </v-tooltip>
+            <v-icon
+              :color="getModeColor(dep.mode)"
+              class="icon ml-1 align-self-center"
+              small
+              role="img"
+              :aria-label="getModeLabel(dep.mode)"
+              :title="getModeLabel(dep.mode)"
+              aria-hidden="false"
+            >
+              {{ getModeIcon(dep.mode) }}
+            </v-icon>
             <v-chip
               v-if="dep.transfers > 0"
               x-small
@@ -57,8 +88,10 @@
             Ziel: {{ dep.direction || '—' }}
           </div>
 
-          <div class="text-caption text--secondary">
-            Abfahrt in {{ minutesUntil(dep.departure) }} | Fahrzeit: {{ formatDuration(dep.duration) }} | Ankunft: {{ formatTime(dep.arrival) }}
+          <div class="text-caption text--secondary transport-meta-row">
+            <span class="transport-meta-part">Abfahrt in {{ minutesUntil(dep.departure) }}</span>&nbsp;|&nbsp;
+            <span class="transport-meta-part">Fahrzeit: {{ formatDuration(dep.duration) }}</span>&nbsp;|&nbsp;
+            <span class="transport-meta-part">Ankunft: {{ formatTime(dep.arrival) }}</span>
           </div>
         </div>
       </v-list>
@@ -86,8 +119,9 @@ dayjs.extend(duration);
 export default {
   name: 'TransportDepartures',
   props: {
-    title: { type: String, required: true },
-    departures: { type: Array, default: () => [] }
+    label: { type: Object, required: true },
+    departures: { type: Array, default: () => [] },
+    osm: { type: Object, default: null }
   },
   data () {
     return {
@@ -164,5 +198,12 @@ export default {
 <style scoped>
 .icon {
   opacity: 0.7;
+}
+.transport-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.transport-meta-part {
+  white-space: nowrap;
 }
 </style>
