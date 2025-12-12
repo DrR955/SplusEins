@@ -89,7 +89,16 @@
             </span>
           </template>
           <template #event="{event, eventParsed}">
-            <div :class="['pa-md-1','custom-event', {'mini-padding': $vuetify.breakpoint.mobile}]">
+            <div
+              :class="['pa-md-1','custom-event', {'mini-padding': $vuetify.breakpoint.mobile}]"
+            >
+              <div
+                v-if="event.location"
+                class="event-room float-right ml-1 text-truncate"
+              >
+                <span class="text-truncate">{{ event.location }}</span>
+              </div>
+
               <div class="font-weight-bold">
                 {{ event.name }}
               </div>
@@ -244,6 +253,10 @@ export default {
   white-space: normal;
   word-wrap: break-word;
   line-height: normal;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  hyphens: auto;
+  container-type: inline-size;
 }
 .mini-padding {
   padding-top: 2px;
@@ -251,8 +264,23 @@ export default {
   padding-right: 1px;
 }
 
+.event-room {
+  display: inline-flex;
+  align-items: center;
+  max-width: 45%;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  padding: 0 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
 .v-calendar .v-event-timed{
   overflow-y: hidden;
 }
 
+@container (max-width: 75px) {
+  .custom-event .event-room {
+    display: none;
+  }
+}
 </style>
