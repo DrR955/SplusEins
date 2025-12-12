@@ -1,27 +1,24 @@
 <template>
   <v-card>
-    <v-toolbar
+    <div
       :style="styleHeader"
-      flat
+      class="pa-2 pl-4 white--text"
     >
-      <template #extension>
-        <v-toolbar-title class="ml-4 mb-6 white--text">
-          {{ details.name }}
-        </v-toolbar-title>
-      </template>
-      <v-spacer />
-
       <v-btn
         icon
         @click="$emit('close')"
+        class="float-right"
       >
         <v-icon color="white">
           {{ mdiClose }}
         </v-icon>
       </v-btn>
-    </v-toolbar>
+      <div class="text-h6 title-wrap pt-1">
+        {{ details.name }}
+      </div>
+    </div>
 
-    <v-card-text class="px-4">
+    <v-card-text class="px-4 pt-4">
       <v-list dense>
         <v-list-item>
           <v-list-item-icon>
@@ -104,5 +101,13 @@ export default {
 }
 .v-toolbar__title {
   white-space: normal;
+}
+
+.title-wrap {
+  white-space: normal;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 4.5rem;
+  line-height: 1.2 !important;
 }
 </style>
